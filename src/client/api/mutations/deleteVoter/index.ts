@@ -14,7 +14,6 @@ const deleteVoter = ({
   accountAddress,
   voterAddress
 }: DeleteVoterInput): Promise<DeleteVoterOutput> => {
-  console.log(voterAddress,'111')
   return mainContract.methods.removeVoter(voterAddress).send({from: accountAddress});
 }
 export default deleteVoter;

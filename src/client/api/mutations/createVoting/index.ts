@@ -26,9 +26,7 @@ const createVoting = ({
 }: CreateVotingInput): Promise<CreateVotingOutput> => {
   const optionByBytes = [];
   const newOption = optionsData.split(',');
-  console.log(newOption,'11111')
   for (const option of newOption) {
-    console.log(option,'222')
     optionByBytes.push(stringToBytes32(option))
   }
   return mainContract.methods.createVoting(stringToBytes32(name), web3.utils.numberToHex(duration), optionByBytes, stringToBytes32(description), +group).send({from: accountAddress});
