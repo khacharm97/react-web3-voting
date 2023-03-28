@@ -17,7 +17,7 @@ const useModifyVoter = (
   const mainContract = useMainContract();
 
   return useMutation(
-    [FunctionKey.CREATE_VOTINGS, { accountAddress }],
+    [FunctionKey.MODIFY_VOTER, { accountAddress }],
     params =>
         modifyVoter({
           mainContract,

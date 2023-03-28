@@ -1,31 +1,17 @@
 import { Main } from '../../../../types/contracts';
 
-export interface GetVotingsInput {
+export interface GetResultsInput {
   mainContract: Main;
+  votingName: string
 }
-export type Voting = {
-  name: string,
-  description: string,
-  group: string,
-  endTime: string
-}
-export type GetVotingsOutput = { data: Voting[] };
 
-const getVotings = async ({
+export type GetResultsOutput = string[];
+
+const getResults = async ({
   mainContract,
-}: GetVotingsInput): Promise<GetVotingsOutput> => {
-  const votingNames = await mainContract.methods.getVotingNames().call();
-  const votings: Voting[] = [];
-  for (const v of votingNames) {
-    const vote = await mainContract.methods.votings(v).call();
-    votings.push({
-      name: v,
-      description: vote.description,
-      group: vote.group,
-      endTime: vote.endTime
-    })
-  }
-  return {data: votings};
+  votingName
+}: GetResultsInput): Promise<GetResultsOutput> => {
+  return await mainContract.methods.getResults(votingName).call();
 };
 
-export default getVotings;
+export default getResults;

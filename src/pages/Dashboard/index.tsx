@@ -1,11 +1,12 @@
 import React, {useState} from 'react';
 import useGetVotings from "../../client/api/queries/getVotings/useGetVotings";
 import web3 from 'web3';
-import {Button, FileInput, Modal, Label, Radio, Spinner} from "flowbite-react/lib/esm/components";
+import {Button, Modal, Label, Radio, Spinner} from "flowbite-react/lib/esm/components";
 import useIsVotedVoter from "../../client/api/mutations/isVoted/useGetVotings";
 import {useWeb3React} from "@web3-react/core";
 import useGetOptions from "../../client/api/queries/getOptions/useGetOptions";
 import useVote from "../../client/api/mutations/Voting/useAddVoter";
+import useGetResults from "../../client/api/queries/getResultes/useGetResults";
 
 const Dashboard = () => {
     const {account} = useWeb3React();
@@ -13,6 +14,7 @@ const Dashboard = () => {
     const [vote, setVote] = useState<string>();
     const {isSuccess, data: votings} = useGetVotings({});
     const {data: options} = useGetOptions({votingName: name || ''}, { enabled: !!name });
+    const {data: results} = useGetResults({votingName: name || ''}, { enabled: !!name });
     const {mutateAsync: isVoted} = useIsVotedVoter({accountAddress: account || ''})
     const {mutateAsync: voteFunc , isLoading: loadingVote} = useVote({accountAddress: account || ''})
     const [openModal, setOpenModal] = useState<boolean>(false);
@@ -31,14 +33,12 @@ const Dashboard = () => {
         setVote(vote);
     }
     const handleVote = () => {
-        console.log(account, name, vote)
         voteFunc({accountAddress: account || '', votingName: name || '', voterFor: vote || ''}).then(()=> {
             onClose()
             setVote('')
             setName('')
         })
     }
-
     return (
         <div className={"flex flex-col px-4"}>
             <h3 className={'text-2xl'}>Voting</h3>
@@ -70,6 +70,10 @@ const Dashboard = () => {
                                                 {(new Date(+el.endTime * 1000)).getDate()}/
                                                 {(new Date(+el.endTime * 1000)).getMonth()}/
                                                 {(new Date(+el.endTime * 1000)).getFullYear()}
+                                                &nbsp; &nbsp;
+                                                {(new Date(+el.endTime * 1000)).getHours()}:
+                                                {(new Date(+el.endTime * 1000)).getMinutes()}:
+                                                {(new Date(+el.endTime * 1000)).getSeconds()}
                                             </td>
                                             <td className="whitespace-nowrap text-center px-6 py-4">
                                                 <Button
@@ -98,26 +102,41 @@ const Dashboard = () => {
                         {name ? web3.utils.toUtf8(name) : null}
                     </Modal.Header>
                     <Modal.Body>
-                        <fieldset
-                            className="flex flex-col gap-4"
-                            id="radio"
-                        >
-                            <legend>
-                                Choose your favorite Voter
-                            </legend>
-                            {options?.map((option, i) => <div className="flex items-center gap-2" key={i}>
-                                <Radio
-                                    id={option + i}
-                                    name={'forVoter'}
-                                    value={option}
-                                    defaultChecked={false}
-                                    onClick={() => handleForVoter(option)}
-                                />
-                                <Label htmlFor={option + i}>
-                                    {web3.utils.toUtf8(option)}
-                                </Label>
-                            </div>)}
-                        </fieldset>
+                        <legend>
+                            Choose your favorite Voter
+                        </legend>
+                        <div className={'flex justify-between'}>
+                            <fieldset
+                                className="flex flex-col gap-4"
+                                id="radio"
+                            >
+                                {options?.map((option, i) => <div className="flex items-center gap-2" key={i}>
+                                    <Radio
+                                        id={option + i}
+                                        name={'forVoter'}
+                                        value={option}
+                                        defaultChecked={false}
+                                        onClick={() => handleForVoter(option)}
+                                    />
+                                    <Label htmlFor={option + i}>
+                                        {web3.utils.toUtf8(option)}
+                                    </Label>
+                                </div>)}
+                            </fieldset>
+                            <div className={'flex flex-col justify-between'}>
+                                {
+                                    results?.map((result, i) => <div className="flex items-center gap-2" key={i}>
+                                    <Label>
+                                        Count
+                                    </Label>
+                                    <Label>
+                                        {result}
+                                    </Label>
+                                </div>
+                                    )}
+                            </div>
+                        </div>
+
                     </Modal.Body>
                     <Modal.Footer>
                         <Button

@@ -17,7 +17,7 @@ const useDeleteVoter = (
   const mainContract = useMainContract();
 
   return useMutation(
-    [FunctionKey.CREATE_VOTINGS, { accountAddress }],
+    [FunctionKey.REMOVE_VOTER, { accountAddress }],
     params =>
         deleteVoter({
           mainContract,
