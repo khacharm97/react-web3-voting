@@ -11,6 +11,7 @@ import useGetResults from "../../client/api/queries/getResultes/useGetResults";
 const Dashboard = () => {
     const {account} = useWeb3React();
     const [name, setName] = useState<string>();
+    const [description, setDescription] = useState<string>();
     const [vote, setVote] = useState<string>();
     const {isSuccess, data: votings} = useGetVotings({});
     const {data: options} = useGetOptions({votingName: name || ''}, { enabled: !!name });
@@ -21,8 +22,9 @@ const Dashboard = () => {
     const onClose = () => {
         setOpenModal(false)
     }
-    const voting = (name: string) => {
+    const voting = (name: string, description: string) => {
         setName(name);
+        setDescription(description);
         setOpenModal(true);
     }
     const checkIsVoted = (name: string) =>{
@@ -78,7 +80,7 @@ const Dashboard = () => {
                                                 <Button
                                                     className={"mx-auto"}
                                                     gradientMonochrome="info"
-                                                    onClick={() => voting(el.name)}
+                                                    onClick={() => voting(el.name, el.description)}
                                                 >
                                                     View more
                                                 </Button>
@@ -101,8 +103,8 @@ const Dashboard = () => {
                         {name ? web3.utils.toUtf8(name) : null}
                     </Modal.Header>
                     <Modal.Body>
-                        <legend>
-                            Choose your favorite Voter
+                        <legend className={"mb-3"}>
+                            {description ? web3.utils.toUtf8(description) : null}
                         </legend>
                         <div className={'flex justify-between'}>
                             <fieldset
