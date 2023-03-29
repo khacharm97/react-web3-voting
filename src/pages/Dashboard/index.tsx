@@ -41,7 +41,6 @@ const Dashboard = () => {
     }
     return (
         <div className={"flex flex-col px-4"}>
-            <h3 className={'text-2xl'}>Voting</h3>
             <div className="flex flex-col">
                 <div className="overflow-x-auto sm:-mx-6 lg:-mx-8">
                     <div className="inline-block min-w-full py-2 sm:px-6 lg:px-8">
