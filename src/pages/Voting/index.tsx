@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {forwardRef, useEffect, useState} from 'react';
 import {useNavigate} from "react-router-dom";
 import {useWeb3React} from "@web3-react/core";
 import useGetRole from "../../client/api/queries/getRole/useGetRole";
@@ -7,6 +7,11 @@ import useAddVoter from "../../client/api/mutations/addVoter/useAddVoter";
 import useModifyVoter from "../../client/api/mutations/modifyVoter/useModifyVoter";
 import useDeleteVoter from "../../client/api/mutations/deleteVoter/useDeleteVoter";
 import {Button, Label, TextInput} from "flowbite-react/lib/esm/components";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import {ReactComponent as PlusIcon} from "../../assets/icons/Plus.svg";
+import {ReactComponent as MinusIcon} from "../../assets/icons/Minus.svg";
+
 
 const Voting = () => {
     const {account} = useWeb3React();
@@ -17,8 +22,8 @@ const Voting = () => {
 
     const [creatingVoting, setCreatingVoting] = useState({
         name: '',
-        duration: '',
-        options: '',
+        duration: new Date(),
+        options: ['', ''],
         description: '',
         group: '',
     });
@@ -59,6 +64,25 @@ const Voting = () => {
             return {...prevState, ...newDate}
         })
     }
+    const handelChangeDatePicker = (event: string) => {
+        setCreatingVoting(prevState => {
+            const newDate = {
+                'duration':  new Date(event)
+            };
+            return {...prevState, ...newDate}
+        })
+    }
+    const handelChangeOptions = (event: any, index: number) => {
+        setCreatingVoting(prevState => {
+            const newOption = prevState.options;
+            // @ts-ignore
+            newOption[index] = event.target.value;
+            const newDate = {
+                'options':  newOption
+            };
+            return {...prevState, ...newDate}
+        })
+    }
     const handelChangeAddVoting = (event: any, type: string) => {
         setAddVoter(prevState => {
             const newDate = {
@@ -82,7 +106,7 @@ const Voting = () => {
         const res = await createVotingAsync({
             name: creatingVoting.name,
             optionsData: creatingVoting.options,
-            duration: creatingVoting.duration,
+            duration: Math.floor((new Date(creatingVoting.duration).getTime() - new Date().getTime()) / 1000),
             description: creatingVoting.description,
             group: creatingVoting.group,
             accountAddress: account || ''
@@ -122,6 +146,31 @@ const Voting = () => {
         console.log(res,'----')
     }
 
+    const DatePickerInput = forwardRef(({ value, onClick }: any, ref:React.ForwardedRef<any>) => (
+        <TextInput
+            onClick={onClick}
+            ref={ref}
+            type="text"
+            id="votingDuration"
+            placeholder="Duration"
+            value={value || ''}
+            readOnly
+        />
+    ));
+    const addOptions = () => {
+        setCreatingVoting(prevState => {
+            const newData = {
+                options:  [...prevState.options, '']
+            };
+            return {...prevState, ...newData}
+        })    }
+    const removeOptions = (index: number) => {
+        setCreatingVoting(prevState => {
+            const newData = prevState.options;
+            newData.splice(index, 1);
+            return {...prevState, options: newData}
+        })
+    }
     return (
         <div className={"flex flex-col px-4"}>
             <div className={'grid grid-rows-2 grid-flow-col gap-4'}>
@@ -152,17 +201,15 @@ const Voting = () => {
                                 <div className="mb-2 block">
                                     <Label
                                         htmlFor="votingDuration"
-                                        value="Duration"
+                                        value="End Date"
                                     />
                                 </div>
-                                <TextInput
-                                    type="text"
-                                    id="votingDuration"
-                                    placeholder="Duration"
-                                    value={creatingVoting.duration || ''}
-                                    onChange={(e: any) => {
-                                        handelChangeCreateVoting(e, 'duration');
-                                    }}
+                                <DatePicker
+                                    selected={new Date(creatingVoting.duration)}
+                                    onChange={(date: any) => handelChangeDatePicker(date)}
+                                    showTimeSelect
+                                    dateFormat="MMMM d, yyyy h:mm aa"
+                                    customInput={ <DatePickerInput/> }
                                 />
                             </div>
                             <div className={'mb-2'}>
@@ -172,15 +219,39 @@ const Voting = () => {
                                         value="Options"
                                     />
                                 </div>
-                                <TextInput
-                                    type="text"
-                                    id="votingOption"
-                                    placeholder="Options"
-                                    value={creatingVoting.options || ''}
-                                    onChange={(e: any) => {
-                                        handelChangeCreateVoting(e, 'options');
-                                    }}
-                                />
+                                <div className={'flex flex-col gap-1'}>
+                                    {creatingVoting.options.map((item, index) =>
+                                        <div key={index} className={'flex gap-2'}>
+                                            <TextInput
+                                                type="text"
+                                                className={'w-full'}
+                                                id="votingOption"
+                                                placeholder={`Option ${index + 1}`}
+                                                value={item || ''}
+                                                onChange={(e: any) => {
+                                                    handelChangeOptions(e, index);
+                                                }}
+                                            />
+
+                                            {
+                                                creatingVoting.options.length > 2 ?
+                                                <button className={'bg-gray-100 px-2 py-1 rounded-lg'} onClick={() => removeOptions(index)}>
+                                                    <MinusIcon className={'w-5 stroke-red-500'} />
+                                                </button> : null
+                                            }
+                                        </div>)}
+                                    <div className={'flex justify-end'}>
+                                        <Button
+                                            className={'w-auto p-0 mt-2 '}
+                                            color="gray"
+                                            onClick={addOptions}
+                                        >
+                                            <PlusIcon className={'w-5 stroke-cyan-500'}/>
+                                        </Button>
+
+                                    </div>
+
+                                </div>
                             </div>
                             <div className={'mb-2'}>
                                 <div className="mb-2 block">

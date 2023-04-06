@@ -7,8 +7,8 @@ export interface CreateVotingInput {
   mainContract: Main;
   accountAddress: string;
   name: string;
-  duration: string,
-  optionsData: string,
+  duration: number,
+  optionsData: string[],
   description: string,
   group: string,
 }
@@ -25,8 +25,7 @@ const createVoting = ({
   group
 }: CreateVotingInput): Promise<CreateVotingOutput> => {
   const optionByBytes = [];
-  const newOption = optionsData.split(',');
-  for (const option of newOption) {
+  for (const option of optionsData) {
     optionByBytes.push(stringToBytes32(option))
   }
   return mainContract.methods.createVoting(stringToBytes32(name), web3.utils.numberToHex(duration), optionByBytes, stringToBytes32(description), +group).send({from: accountAddress});

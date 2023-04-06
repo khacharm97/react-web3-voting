@@ -11,7 +11,7 @@ import useGetResults from "../../client/api/queries/getResultes/useGetResults";
 const Dashboard = () => {
     const {account} = useWeb3React();
     const [name, setName] = useState<string>();
-    const [description, setDescription] = useState<string>();
+    const [description, setDescription] = useState<{ description: string, ended: boolean, winner: string}>();
     const [vote, setVote] = useState<string>();
     const {isSuccess, data: votings} = useGetVotings({});
     const {data: options} = useGetOptions({votingName: name || ''}, { enabled: !!name });
@@ -22,9 +22,13 @@ const Dashboard = () => {
     const onClose = () => {
         setOpenModal(false)
     }
-    const voting = (name: string, description: string) => {
+    const voting = (name: string, description: string, ended: boolean, winner: string) => {
         setName(name);
-        setDescription(description);
+        setDescription({
+            description,
+            ended,
+            winner
+        });
         setOpenModal(true);
     }
     const checkIsVoted = (name: string) =>{
@@ -54,7 +58,7 @@ const Dashboard = () => {
                                     <th scope="col" className="text-center px-6 py-4">Name</th>
                                     <th scope="col" className="text-center px-6 py-4">Description</th>
                                     <th scope="col" className="text-center px-6 py-4">Group</th>
-                                    <th scope="col" className="text-center px-6 py-4">End Time</th>
+                                    <th scope="col" className="text-center px-6 py-4">End Time (y/m/d h:m)</th>
                                     <th scope="col" className="text-center px-6 py-4">Action</th>
                                 </tr>
                                 </thead>
@@ -68,19 +72,20 @@ const Dashboard = () => {
                                             <td className="whitespace-nowrap text-center px-6 py-4">{web3.utils.toUtf8(el.description)}</td>
                                             <td className="whitespace-nowrap text-center px-6 py-4">{el.group}</td>
                                             <td className="whitespace-nowrap text-center px-6 py-4">
-                                                {(new Date(+el.endTime * 1000)).getDate()}/
-                                                {(new Date(+el.endTime * 1000)).getMonth()}/
-                                                {(new Date(+el.endTime * 1000)).getFullYear()}
-                                                &nbsp; &nbsp;
-                                                {(new Date(+el.endTime * 1000)).getHours()}:
-                                                {(new Date(+el.endTime * 1000)).getMinutes()}:
-                                                {(new Date(+el.endTime * 1000)).getSeconds()}
-                                            </td>
+                                                <span className={`${new Date().getTime() > +el.endTime * 1000 && 'text-red-500'}`}>
+                                                    {(new Date(+el.endTime * 1000)).getFullYear()}/
+                                                    {(new Date(+el.endTime * 1000)).getMonth() < 10 ? '0' + (new Date(+el.endTime * 1000)).getMonth() : (new Date(+el.endTime * 1000)).getMonth()}/
+                                                    {(new Date(+el.endTime * 1000)).getDate() < 10 ? '0' + (new Date(+el.endTime * 1000)).getDate() : (new Date(+el.endTime * 1000)).getDate()}
+                                                    &nbsp; &nbsp;
+                                                    {(new Date(+el.endTime * 1000)).getHours() < 10 ? '0' + (new Date(+el.endTime * 1000)).getHours() : (new Date(+el.endTime * 1000)).getHours()}:
+                                                    {(new Date(+el.endTime * 1000)).getMinutes() < 10 ? '0' + (new Date(+el.endTime * 1000)).getMinutes() : (new Date(+el.endTime * 1000)).getMinutes()}
+                                                </span>
+                                                 </td>
                                             <td className="whitespace-nowrap text-center px-6 py-4">
                                                 <Button
                                                     className={"mx-auto"}
                                                     gradientMonochrome="info"
-                                                    onClick={() => voting(el.name, el.description)}
+                                                    onClick={() => voting(el.name, el.description, new Date().getTime() > +el.endTime * 1000, el.winner)}
                                                 >
                                                     View more
                                                 </Button>
@@ -100,59 +105,67 @@ const Dashboard = () => {
                     onClose={onClose}
                 >
                     <Modal.Header>
-                        {name ? web3.utils.toUtf8(name) : null}
+                        {name ? web3.utils.toAscii(name) : null}
                     </Modal.Header>
                     <Modal.Body>
                         <legend className={"mb-3"}>
-                            {description ? web3.utils.toUtf8(description) : null}
+                            {description ? web3.utils.toAscii(description.description) : null}
                         </legend>
                         <div className={'flex justify-between'}>
-                            <fieldset
-                                className="flex flex-col gap-4"
-                                id="radio"
-                            >
-                                {options?.map((option, i) => <div className="flex items-center gap-2" key={i}>
-                                    <Radio
-                                        id={option + i}
-                                        name={'forVoter'}
-                                        value={option}
-                                        defaultChecked={false}
-                                        onClick={() => handleForVoter(option)}
-                                    />
-                                    <Label htmlFor={option + i}>
-                                        {web3.utils.toUtf8(option)}
-                                    </Label>
-                                </div>)}
-                            </fieldset>
-                            <div className={'flex flex-col justify-between'}>
-                                {
-                                    results?.map((result, i) => <div className="flex items-center gap-2" key={i}>
-                                    <Label>
-                                        Count
-                                    </Label>
-                                    <Label>
-                                        {result}
-                                    </Label>
-                                </div>
-                                    )}
-                            </div>
+                            {
+                                !description?.ended ?
+                                    <>
+                                        <fieldset
+                                            className="flex flex-col gap-4"
+                                            id="radio"
+                                        >
+                                            {options?.map((option, i) => <div className="flex items-center gap-2" key={i}>
+                                                <Radio
+                                                    id={option + i}
+                                                    name={'forVoter'}
+                                                    value={option}
+                                                    defaultChecked={false}
+                                                    onClick={() => handleForVoter(option)}
+                                                />
+                                                <Label htmlFor={option + i}>
+                                                    {web3.utils.toUtf8(option)}
+                                                </Label>
+                                            </div>)}
+                                        </fieldset>
+                                        <div className={'flex flex-col justify-between'}>
+                                            {
+                                                results?.map((result, i) => <div className="flex items-center gap-2" key={i}>
+                                                        <Label>
+                                                            Count
+                                                        </Label>
+                                                        <Label>
+                                                            {result}
+                                                        </Label>
+                                                    </div>
+                                                )}
+                                        </div>
+                                    </> :
+                                    <span>
+                                        <span className={"font-bold"}>Winner:</span> {description?.winner ? web3.utils.toAscii(description.winner) : ''}
+                                    </span>
+                            }
                         </div>
-
                     </Modal.Body>
                     <Modal.Footer>
-                        <Button
+                        {
+                            !description?.ended ? <Button
                             gradientMonochrome="success"
                             disabled={!(account && name && vote) || loadingVote}
                             onClick={handleVote}
                         >
-                            {loadingVote ?<div className="mr-3">
-                                 <Spinner
+                            {loadingVote ? <div className="mr-3">
+                                <Spinner
                                     size="sm"
                                     light={true}
                                 />
-                            </div>: null}
+                            </div> : null}
                             Vote
-                        </Button>
+                        </Button> : null}
                     </Modal.Footer>
                 </Modal>
             </React.Fragment>
